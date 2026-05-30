@@ -1,0 +1,25 @@
+{
+  "action": "create",
+  "type": "Comment",
+  "createdAt": "2024-01-15T16:45:00.000Z",
+  "data": {
+    "id": "comment-789",
+    "body": "This bug has been reproduced in staging",
+    "createdAt": "2024-01-15T16:45:00.000Z",
+    "updatedAt": "2024-01-15T16:45:00.000Z",
+    "userId": "user-001",
+    "issueId": "issue-123",
+    "issue": {
+      "id": "issue-123",
+      "identifier": "TEAM-42",
+      "title": "Fix critical bug",
+      "stateName": "In Progress",
+      "teamKey": "TEAM"
+    },
+    "user": {
+      "id": "user-001",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "action": "update",
+  "type": "Issue",
+  "createdAt": "2024-01-15T09:00:00.000Z",
+  "updatedBy": "user-003",
+  "data": {
+    "id": "issue-123",
+    "identifier": "TEAM-42",
+    "title": "Implement feature",
+    "description": "Implement the new feature for the upcoming release",
+    "stateName": "In Progress",
+    "teamKey": "TEAM",
+    "priority": 2,
+    "url": "https://linear.app/team/issue/TEAM-42",
+    "cycle": {
+      "id": "cycle-456",
+      "name": "Sprint 23",
+      "startsAt": "2024-01-15T00:00:00.000Z",
+      "endsAt": "2024-01-29T00:00:00.000Z"
+    },
+    "team": {
+      "id": "team-001",
+      "name": "Engineering",
+      "key": "TEAM"
+    },
+    "assignee": {
+      "id": "user-001",
+      "name": "John Doe"
+    }
+  }
+}

@@ -1,0 +1,166 @@
+apiVersion: v1
+kind: Console
+metadata:
+  canvasId: "Infrastructure-Aware Issue Management on Render"
+  name: "Linear Integration Dashboard"
+spec:
+  panels:
+    # Row 1 — Left: Recent Linear Events
+    - id: recent-linear-events
+      type: table
+      title: "Recent Linear Events"
+      content:
+        dataSource:
+          kind: memory
+          namespace: "linear-relay"
+          render:
+            columns:
+              - name: timestamp
+                label: Time
+              - name: event_type
+                label: Event
+              - name: issue_id
+                label: Issue
+              - name: team
+                label: Team
+              - name: from_state
+                label: From State
+              - name: to_state
+                label: To State
+              - name: labels
+                label: Labels
+              - name: actor
+                label: Actor
+
+    # Row 1 — Right: Integration Status
+    - id: integration-status
+      type: markdown
+      title: "Integration Status"
+      content:
+        body: |
+          ## Linear Connection
+
+          | Field | Value |
+          |-------|-------|
+          | **Status** | ✅ Active |
+          | **Workspace** | superplane |
+          | **Team** | Engineering (ENG) |
+          | **API Key** | •••••••• (configured) |
+          | **Webhook URL** | `https://linear-relay.onrender.com/webhooks/linear` |
+          | **Last Sync** | {{ lastSyncTime }} |
+
+          ### Health
+          - **Webhook Relay**: 🟢 Receiving events
+          - **API Client**: 🟢 Connected
+          - **Event Queue**: 🟢 Draining normally
+
+    # Row 2 — Left: PR-to-Issue Sync Activity
+    - id: pr-issue-sync
+      type: table
+      title: "PR-to-Issue Sync Activity"
+      content:
+        dataSource:
+          kind: memory
+          namespace: "linear-relay"
+          render:
+            columns:
+              - name: timestamp
+                label: Time
+              - name: pr_number
+                label: PR
+              - name: pr_author
+                label: Author
+              - name: issue_id
+                label: Linear Issue
+              - name: action
+                label: Sync Action
+              - name: render_deploy
+                label: Deploy Triggered
+              - name: status
+                label: Status
+
+    # Row 2 — Right: Deployment Pipeline
+    - id: deployment-pipeline
+      type: markdown
+      title: "Deployment Pipeline"
+      content:
+        body: |
+          ## Automation Flows
+
+          ### 1. PR → In Review
+          `GitHub PR Opened` → `Update Linear Issue → In Review` → `Slack Notification`
+          - Status: 🟢 **Active**
+
+          ### 2. Done → Deploy
+          `Linear Issue → Done` → `Trigger Render Deploy` → `Slack Notification`
+          - Status: 🟢 **Active**
+
+          ### 3. Incident → Create Issue
+          `Render Incident Alert` → `Create Linear Issue` → `Slack Notification`
+          - Status: 🟡 **Standby** (no active incidents)
+
+          ---
+          *Flows are managed via SuperPlane workflows.*
+          *Last pipeline event: {{ lastPipelineEvent }}*
+
+    # Row 3 — Full Width: Render Services
+    - id: render-services
+      type: markdown
+      title: "Render Services"
+      content:
+        body: |
+          ## Infrastructure on Render
+
+          ### 1. Web Service — `linear-relay`
+          | Property | Value |
+          |----------|-------|
+          | **Type** | Web Service (Docker) |
+          | **Region** | Oregon, USA |
+          | **Plan** | Starter |
+          | **Branch** | `main` |
+          | **Build** | `Dockerfile` |
+          | **Start** | `node dist/server.js` |
+          | **URL** | `https://linear-relay.onrender.com` |
+          | **Health Check** | `/health` → 200 OK |
+          | **Purpose** | Webhook relay (GitHub + Linear), event processing, API endpoints |
+
+          ### 2. PostgreSQL — `linear-relay-db`
+          | Property | Value |
+          |----------|-------|
+          | **Type** | PostgreSQL |
+          | **Region** | Oregon, USA |
+          | **Plan** | Starter |
+          | **Database** | `linear_relay` |
+          | **Purpose** | Event log (incoming webhooks), state cache (issue→PR mappings, last sync timestamps) |
+
+  layout:
+    # Row 1
+    - i: recent-linear-events
+      x: 0
+      'y': 0
+      w: 6
+      h: 4
+    - i: integration-status
+      x: 6
+      'y': 0
+      w: 6
+      h: 4
+
+    # Row 2
+    - i: pr-issue-sync
+      x: 0
+      'y': 4
+      w: 6
+      h: 4
+    - i: deployment-pipeline
+      x: 6
+      'y': 4
+      w: 6
+      h: 4
+
+    # Row 3
+    - i: render-services
+      x: 0
+      'y': 8
+      w: 12
+      h: 4
