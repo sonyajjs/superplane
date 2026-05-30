@@ -108,6 +108,9 @@ func (r *Render) Actions() []core.Action {
 		&UpdateEnvVar{},
 		&AddCustomDomain{},
 		&RemoveCustomDomain{},
+		&SuspendService{},
+		&GetLogs{},
+		&EstimateCost{},
 	}
 }
 

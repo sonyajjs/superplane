@@ -10,6 +10,9 @@ import { rollbackDeployMapper } from "./rollback_deploy";
 import { updateEnvVarMapper } from "./update_env_var";
 import { addCustomDomainMapper } from "./add_custom_domain";
 import { removeCustomDomainMapper } from "./remove_custom_domain";
+import { suspendServiceMapper } from "./suspend_service";
+import { getLogsMapper } from "./get_logs";
+import { estimateCostMapper } from "./estimate_cost";
 
 export const componentMappers: Record<string, ComponentBaseMapper> = {
   deploy: deployMapper,
@@ -21,6 +24,9 @@ export const componentMappers: Record<string, ComponentBaseMapper> = {
   updateEnvVar: updateEnvVarMapper,
   "service.addCustomDomain": addCustomDomainMapper,
   "service.removeCustomDomain": removeCustomDomainMapper,
+  suspendService: suspendServiceMapper,
+  getLogs: getLogsMapper,
+  estimateCost: estimateCostMapper,
 };
 
 export const triggerRenderers: Record<string, TriggerRenderer> = {
