@@ -246,6 +246,12 @@ import {
   triggerRenderers as ociTriggerRenderers,
   eventStateRegistry as ociEventStateRegistry,
 } from "./oci/index";
+import {
+  componentMappers as linearComponentMappers,
+  triggerRenderers as linearTriggerRenderers,
+  eventStateRegistry as linearEventStateRegistry,
+} from "./linear/index";
+import { incidentCorrelateMapper, INCIDENT_CORRELATE_STATE_REGISTRY } from "./incident_correlate";
 
 import { filterMapper, FILTER_STATE_REGISTRY } from "./filter";
 import { sshMapper, SSH_STATE_REGISTRY } from "./ssh";
@@ -288,6 +294,7 @@ const componentBaseMappers: Record<string, ComponentBaseMapper> = {
   approval: approvalMapper,
   merge: mergeMapper,
   sendEmail: sendEmailMapper,
+  incident_correlate: incidentCorrelateMapper,
 };
 
 const appMappers: Record<string, Record<string, ComponentBaseMapper>> = {
@@ -335,6 +342,7 @@ const appMappers: Record<string, Record<string, ComponentBaseMapper>> = {
   servicenow: servicenowComponentMappers,
   elastic: elasticComponentMappers,
   oci: ociComponentMappers,
+  linear: linearComponentMappers,
 };
 
 const appTriggerRenderers: Record<string, Record<string, TriggerRenderer>> = {
@@ -382,6 +390,7 @@ const appTriggerRenderers: Record<string, Record<string, TriggerRenderer>> = {
   servicenow: servicenowTriggerRenderers,
   elastic: elasticTriggerRenderers,
   oci: ociTriggerRenderers,
+  linear: linearTriggerRenderers,
 };
 
 const appEventStateRegistries: Record<string, Record<string, EventStateRegistry>> = {
@@ -428,6 +437,7 @@ const appEventStateRegistries: Record<string, Record<string, EventStateRegistry>
   servicenow: servicenowEventStateRegistry,
   elastic: elasticEventStateRegistry,
   oci: ociEventStateRegistry,
+  linear: linearEventStateRegistry,
 };
 
 const eventStateRegistries: Record<string, EventStateRegistry> = {
@@ -442,6 +452,7 @@ const eventStateRegistries: Record<string, EventStateRegistry> = {
   wait: WAIT_STATE_REGISTRY,
   merge: MERGE_STATE_REGISTRY,
   sendEmail: SEND_EMAIL_STATE_REGISTRY,
+  incident_correlate: INCIDENT_CORRELATE_STATE_REGISTRY,
 };
 
 const customFieldRenderers: Record<string, CustomFieldRenderer> = {

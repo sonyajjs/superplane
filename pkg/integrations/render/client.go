@@ -911,6 +911,80 @@ func parseWebhooksWithCursor(withCursor []webhookWithCursor) []Webhook {
 	return webhooks
 }
 
+type SuspendServiceRequest struct {
+	Suspended bool `json:"suspended"`
+}
+
+type LogEntry struct {
+	Timestamp string `json:"timestamp"`
+	Message   string `json:"message"`
+}
+
+type logsResponse struct {
+	Logs []LogEntry `json:"logs"`
+}
+
+func (c *Client) SuspendService(serviceID string) error {
+	if serviceID == "" {
+		return fmt.Errorf("serviceID is required")
+	}
+
+	_, _, err := c.execRequestWithResponse(
+		http.MethodPatch,
+		"/services/"+url.PathEscape(serviceID),
+		nil,
+		SuspendServiceRequest{Suspended: true},
+	)
+	return err
+}
+
+func (c *Client) ResumeService(serviceID string) error {
+	if serviceID == "" {
+		return fmt.Errorf("serviceID is required")
+	}
+
+	_, _, err := c.execRequestWithResponse(
+		http.MethodPatch,
+		"/services/"+url.PathEscape(serviceID),
+		nil,
+		SuspendServiceRequest{Suspended: false},
+	)
+	return err
+}
+
+func (c *Client) GetLogs(serviceID string, lines int) ([]LogEntry, error) {
+	if serviceID == "" {
+		return nil, fmt.Errorf("serviceID is required")
+	}
+
+	query := url.Values{}
+	if lines > 0 {
+		query.Set("limit", fmt.Sprintf("%d", lines))
+	}
+
+	_, body, err := c.execRequestWithResponse(
+		http.MethodGet,
+		"/services/"+url.PathEscape(serviceID)+"/logs",
+		query,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var response logsResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		// Fallback: Render may return an array directly
+		var entries []LogEntry
+		if err := json.Unmarshal(body, &entries); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal logs response: %w", err)
+		}
+		return entries, nil
+	}
+
+	return response.Logs, nil
+}
+
 func (c *Client) execRequestWithResponse(
 	method string,
 	path string,

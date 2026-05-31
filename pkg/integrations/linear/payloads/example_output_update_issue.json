@@ -1,0 +1,26 @@
+{
+  "id": "issue-123",
+  "identifier": "TEAM-42",
+  "title": "Updated issue title",
+  "description": "Updated description",
+  "stateName": "Done",
+  "teamKey": "TEAM",
+  "priority": 2,
+  "url": "https://linear.app/team/issue/TEAM-42",
+  "labels": [
+    {
+      "id": "label-002",
+      "name": "Critical",
+      "color": "#FF6B6B"
+    }
+  ],
+  "team": {
+    "id": "team-001",
+    "name": "Engineering",
+    "key": "TEAM"
+  },
+  "assignee": {
+    "id": "user-001",
+    "name": "John Doe"
+  }
+}

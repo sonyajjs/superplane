@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: superplane-linear-relay
+    runtime: docker
+    plan: starter
+    repo: https://github.com/superplanehq/superplane
+    branch: feat/render-cost-guardian-and-operations
+    rootDir: linear-relay
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: superplane-linear-relay-db
+          property: connectionString
+      - key: SUPERPLANE_WEBHOOK_URL
+        sync: false
+      - key: LINEAR_WEBHOOK_SECRET
+        sync: false
+    healthCheckPath: /health
+
+databases:
+  - name: superplane-linear-relay-db
+    plan: starter
+    databaseName: linear_relay

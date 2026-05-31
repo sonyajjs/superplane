@@ -1,0 +1,221 @@
+metadata:
+  name: "Infrastructure-Aware Issue Management on Render"
+  description: "Sync GitHub PRs with Linear issues and automate deployments on Render. Operates across two Render services — srv-api-prod-abc123 (Web Service, the main API app) and srv-db-postgres-def456 (PostgreSQL, event log + state cache). Flow 1 moves a Linear issue to In Review when a PR is opened, then deploys a preview on the Web Service. Flow 2 deploys to production when an issue marked infra-change reaches Done. Flow 3 creates a high-priority Linear issue when PagerDuty fires an incident."
+  isTemplate: false
+spec:
+  nodes:
+    # ── FLOW 1: PR Opened → Move Issue to In Review + Deploy Preview ──
+    - id: "github-onpr-l5"
+      name: "GitHub: PR Opened"
+      type: "TYPE_TRIGGER"
+      component: "github.onPullRequest"
+      configuration:
+        actions:
+          - "opened"
+        repository: "my-org/my-repo"
+        branch: null
+        filterLabels: []
+      metadata:
+        repository:
+          id: 123456789
+          name: "my-repo"
+          url: "https://github.com/my-org/my-repo"
+      position:
+        x: 100
+        y: 100
+      isCollapsed: false
+
+    - id: "linear-update-inreview-l5"
+      name: "Linear: Move Issue to In Review"
+      type: "TYPE_ACTION"
+      component: "linear.updateIssue"
+      configuration:
+        issueId: "{{ $['GitHub: PR Opened'].data.pull_request.body | regex_match('TEAM-\\\\d+') }}"
+        stateId: "state-in-review-id"
+      position:
+        x: 600
+        y: 100
+      isCollapsed: false
+
+    - id: "slack-notify-review-l5"
+      name: "Slack: Notify Team Review Ready"
+      type: "TYPE_ACTION"
+      component: "slack.sendTextMessage"
+      configuration:
+        channel: "C0123456789"
+        text: "PR #{{ $['GitHub: PR Opened'].data.pull_request.number }} is ready for review\nLinked issue: {{ $['Linear: Move Issue to In Review'].data.identifier }}\nURL: {{ $['GitHub: PR Opened'].data.pull_request.html_url }}"
+      metadata:
+        channel:
+          id: "C0123456789"
+          name: "dev-team"
+      position:
+        x: 1100
+        y: 100
+      isCollapsed: false
+
+    - id: "render-update-preview-env-l5"
+      name: "Render: Set PREVIEW_BRANCH on Web Service"
+      type: "TYPE_ACTION"
+      component: "render.updateEnvVar"
+      configuration:
+        apiKey: "{{ secrets.RENDER_API_KEY }}"
+        webhookUrl: "https://srv-api-prod-abc123.onrender.com"
+      position:
+        x: 600
+        y: 300
+      isCollapsed: false
+
+    - id: "render-deploy-preview-l5"
+      name: "Render: Deploy Preview on Web Service"
+      type: "TYPE_ACTION"
+      component: "render.deploy"
+      configuration:
+        serviceId: "srv-api-prod-abc123"
+      position:
+        x: 1100
+        y: 300
+      isCollapsed: false
+
+    # ── FLOW 2: Issue Done (infra-change) → Deploy to Production ──
+    - id: "linear-issue-done-l5"
+      name: "Linear: Issue Moved to Done"
+      type: "TYPE_TRIGGER"
+      component: "linear.onIssueStateChange"
+      configuration:
+        teamId: "team-abc123"
+      position:
+        x: 100
+        y: 700
+      isCollapsed: false
+
+    - id: "filter-infra-l5"
+      name: "Filter: Has infra-change Label"
+      type: "TYPE_ACTION"
+      component: "filter"
+      configuration:
+        condition: "{{ $['Linear: Issue Moved to Done'].data.labels contains 'infra-change' }}"
+      position:
+        x: 600
+        y: 700
+      isCollapsed: false
+
+    - id: "render-update-release-env-l5"
+      name: "Render: Update RELEASE_VERSION on Web Service"
+      type: "TYPE_ACTION"
+      component: "render.updateEnvVar"
+      configuration:
+        apiKey: "{{ secrets.RENDER_API_KEY }}"
+        webhookUrl: "https://srv-api-prod-abc123.onrender.com"
+      position:
+        x: 1100
+        y: 700
+      isCollapsed: false
+
+    - id: "render-deploy-prod-l5"
+      name: "Render: Deploy to Production on Web Service"
+      type: "TYPE_ACTION"
+      component: "render.deploy"
+      configuration:
+        serviceId: "srv-api-prod-abc123"
+      position:
+        x: 1600
+        y: 700
+      isCollapsed: false
+
+    - id: "slack-notify-deployed-l5"
+      name: "Slack: Notify Deployed to Production"
+      type: "TYPE_ACTION"
+      component: "slack.sendTextMessage"
+      configuration:
+        channel: "C0123456789"
+        text: "Production deploy triggered for issue {{ $['Linear: Issue Moved to Done'].data.identifier }}\nService: srv-api-prod-abc123 (Web Service)\nDB: srv-db-postgres-def456 (PostgreSQL)"
+      metadata:
+        channel:
+          id: "C0123456789"
+          name: "dev-team"
+      position:
+        x: 2100
+        y: 700
+      isCollapsed: false
+
+    # ── FLOW 3: PagerDuty Incident → Create Linear Issue ──
+    - id: "pagerduty-incident-l5"
+      name: "PagerDuty: Incident Triggered"
+      type: "TYPE_TRIGGER"
+      component: "pagerduty.onIncident"
+      configuration:
+        serviceId: "srv-api-prod-abc123"
+        urgency: "high"
+      position:
+        x: 100
+        y: 1100
+      isCollapsed: false
+
+    - id: "linear-create-incident-l5"
+      name: "Linear: Create Incident Issue"
+      type: "TYPE_ACTION"
+      component: "linear.createIssue"
+      configuration:
+        teamId: "team-abc123"
+        title: "Incident: {{ $['PagerDuty: Incident Triggered'].data.incident.title }}"
+        description: "PagerDuty incident detected.\nIncident ID: {{ $['PagerDuty: Incident Triggered'].data.incident.id }}\nSeverity: {{ $['PagerDuty: Incident Triggered'].data.incident.severity }}\nURL: {{ $['PagerDuty: Incident Triggered'].data.incident.html_url }}"
+        priority: 1
+        labelIds:
+          - "label-incident-id"
+      position:
+        x: 600
+        y: 1100
+      isCollapsed: false
+
+    - id: "slack-notify-incident-l5"
+      name: "Slack: Notify Incident Issue Created"
+      type: "TYPE_ACTION"
+      component: "slack.sendTextMessage"
+      configuration:
+        channel: "C9876543210"
+        text: "Incident issue created: {{ $['Linear: Create Incident Issue'].data.identifier }}\nOriginal incident: {{ $['PagerDuty: Incident Triggered'].data.incident.title }}\nAssigned priority: Urgent\nAffected services: srv-api-prod-abc123, srv-db-postgres-def456"
+      metadata:
+        channel:
+          id: "C9876543210"
+          name: "incidents"
+      position:
+        x: 1100
+        y: 1100
+      isCollapsed: false
+
+  edges:
+    # ── FLOW 1 edges ──
+    - sourceId: "github-onpr-l5"
+      targetId: "linear-update-inreview-l5"
+      channel: "default"
+    - sourceId: "linear-update-inreview-l5"
+      targetId: "slack-notify-review-l5"
+      channel: "default"
+    - sourceId: "github-onpr-l5"
+      targetId: "render-update-preview-env-l5"
+      channel: "default"
+    - sourceId: "render-update-preview-env-l5"
+      targetId: "render-deploy-preview-l5"
+      channel: "default"
+
+    # ── FLOW 2 edges ──
+    - sourceId: "linear-issue-done-l5"
+      targetId: "filter-infra-l5"
+      channel: "default"
+    - sourceId: "filter-infra-l5"
+      targetId: "render-update-release-env-l5"
+      channel: "passed"
+    - sourceId: "render-update-release-env-l5"
+      targetId: "render-deploy-prod-l5"
+      channel: "default"
+    - sourceId: "render-deploy-prod-l5"
+      targetId: "slack-notify-deployed-l5"
+      channel: "default"
+
+    # ── FLOW 3 edges ──
+    - sourceId: "pagerduty-incident-l5"
+      targetId: "linear-create-incident-l5"
+      channel: "default"
+    - sourceId: "linear-create-incident-l5"
+      targetId: "slack-notify-incident-l5"
+      channel: "default"

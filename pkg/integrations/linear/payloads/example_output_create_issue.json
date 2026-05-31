@@ -1,0 +1,26 @@
+{
+  "id": "issue-123",
+  "identifier": "TEAM-42",
+  "title": "Fix critical bug",
+  "description": "This is a critical production bug",
+  "stateName": "In Progress",
+  "teamKey": "TEAM",
+  "priority": 1,
+  "url": "https://linear.app/team/issue/TEAM-42",
+  "labels": [
+    {
+      "id": "label-001",
+      "name": "Bug",
+      "color": "#E5383B"
+    }
+  ],
+  "team": {
+    "id": "team-001",
+    "name": "Engineering",
+    "key": "TEAM"
+  },
+  "assignee": {
+    "id": "user-001",
+    "name": "John Doe"
+  }
+}
